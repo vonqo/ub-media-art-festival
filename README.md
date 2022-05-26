@@ -1,2 +1,3 @@
-# ub-media-art-festival
+# Ulaanbaatar Media Art Festival
+
 Interactive sketch
