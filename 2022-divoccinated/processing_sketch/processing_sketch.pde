@@ -10,8 +10,9 @@ final color blue = color(1, 64, 110);
 
 final int totalLayerInFrame = 12;
 final float baseWidthOfBorder = 0.9;
-final int boxAnimationIteration = 280;
-final float fftThreshold = 0.1;
+final int boxAnimationIteration = 150;
+final float fftThreshold = 0.05;
+final float fftThresholdMax = 0.4;
 
 final ArrayList<PImage> images = new ArrayList<PImage>();
 final ArrayList<Layer> layers = new ArrayList<Layer>();
@@ -28,8 +29,10 @@ int wOffset = 0;
 class Layer {
   private int id;
   private int frame = 0;
-  private boolean isBox;
   private PGraphics graphics;
+  private boolean isBox;
+  
+  private int imgIndex;
   private float imgVisibility;
   
   private int leftOffset = 0;
@@ -40,6 +43,7 @@ class Layer {
     this.isBox = isbox;
     this.frame += frameOffset;
     imgVisibility = 0;
+    imgIndex = int(random(images.size()));
   }
   
   void reset() {
@@ -48,6 +52,7 @@ class Layer {
       
     } else {
       imgVisibility = 0;
+      imgIndex = int(random(images.size()));
     }
   }
   
@@ -59,12 +64,12 @@ class Layer {
     
     float iter = ((float)frame / boxAnimationIteration);
     float boxWidth = easeInExpo(iter, 1, width + wOffset, 1);
-    this.topOffset = (int)(zoomPointY - boxWidth * 0.85);
-    this.leftOffset = (int)(zoomPointX - boxWidth * 0.5);
+    this.topOffset = int(zoomPointY - boxWidth * 0.85);
+    this.leftOffset = int(zoomPointX - boxWidth * 0.5);
   
     if(isBox) {
-      int boxTickness = (int)(boxWidth/17 + baseWidthOfBorder);
-      this.graphics = drawBox(boxWidth, boxTickness, white,  512 * iter);
+      int boxTickness = int(boxWidth / 12 + baseWidthOfBorder);
+      this.graphics = drawBox(boxWidth, boxTickness, white,  350 * iter);
     } else {
       float a = boxAnimationIteration * 0.65;
       float b = 0;
@@ -73,7 +78,7 @@ class Layer {
       } else {
          b = (frame / a) * 256 * imgVisibility;
       }
-      this.graphics = drawImage(boxWidth, b);
+      this.graphics = drawImage(imgIndex, boxWidth, b);
     }
     return true;
   }
@@ -103,16 +108,16 @@ class Layer {
 /// ================================================= ///
 void setup() {
   background(0);
-  frameRate(50);
-  smooth(4);
+  frameRate(26);
+  smooth(0);
   
   // prod
-  //fullScreen();
+  // fullScreen();
   // size(1080, 1920, P2D);
-  size(720, 1280, P2D);
+  // size(720, 1280, P2D);
   
   /// dev
-  // size(540, 980, P2D); // 1/2 of Full HD vertical
+  size(540, 980, P2D); // 1/2 of Full HD vertical
   
   /// RUNTINE
   /// ======== audio =======
@@ -134,13 +139,13 @@ void setup() {
   /// ======== init layers ======= 
   float layerDiff = (float)boxAnimationIteration / totalLayerInFrame;
   for(int i = 1; i <= totalLayerInFrame; i++) {
-    
     Layer layer;
+    
     // even or odd
     if((i | 1) > i) {
-      layer = new Layer(i, true, (int)(i * layerDiff));
+      layer = new Layer(i, true, int(i * layerDiff));
     } else {
-      layer = new Layer(i, false, (int)(i * layerDiff));
+      layer = new Layer(i, false, int(i * layerDiff));
     }
     layers.add(layer);
   }
@@ -153,12 +158,6 @@ void draw() {
   background(0);
   fft.analyze(fftSpectrum);
   println(frameRate);
-  
-  float sum = 0;
-  for(int i = 0; i < fftBands; i++){
-    sum += fftSpectrum[i];
-  }
-  
   // println(sum);
   
   for(int i = 0; i < layers.size(); i++) {
@@ -167,8 +166,9 @@ void draw() {
       if(layer.isBox()) {
         image(layer.getGraphics(), layer.getLeftOffset(), layer.getTopOffset());
       } else {
-        if(fftThreshold < sum) {
-          layer.setImageVisibility(0.8);
+        float visibility = setVisibleViaNoise();
+        if(visibility != 0) {
+          layer.setImageVisibility(visibility);
           image(layer.getGraphics(), layer.getLeftOffset(), layer.getTopOffset());
         }
       }
@@ -189,26 +189,43 @@ void draw() {
   //updatePixels();
 }
 
+float setVisibleViaNoise() {
+  float sum = 0;
+  for(int i = 0; i < fftBands; i++){
+    sum += fftSpectrum[i];
+  }
+  if(fftThreshold < sum) {
+    float tmp = sum/fftThresholdMax;
+    if(tmp > 1) {
+      return 1;
+    }
+    return tmp;
+  }
+  return 0;
+}
+
 /// Draw 9:16 ratio box
 PGraphics drawBox(float w, int tickness, color clr, float opacity) {
-  int ww = (int)w - tickness;
-  int hh = (int)(w * 1.7) - tickness;
+  //w = w/2;
+  //tickness = tickness/2;
+  
+  int ww = (int(w) - tickness);
+  int hh = (int(w * 1.7) - tickness);
   PGraphics pg = createGraphics(ww + tickness, hh + tickness);
-  pg.smooth(12);
+  pg.smooth(4);
   pg.beginDraw();
   pg.background(0, 0);
   
   int p1x = tickness/2;
   int p1y = tickness/2;
-  int p2x = (int)(p1x + ww);
+  int p2x = int(p1x + ww);
   int p2y = p1y;
   int p3x = p2x;
-  int p3y = (int)(p2y + hh);
+  int p3y = int(p2y + hh);
   int p4x = p1x;
   int p4y = p3y;
   
   pg.stroke(clr, opacity);
-  // pg.stroke(clr);
   pg.strokeWeight(tickness);
   pg.strokeJoin(MITER);
   pg.strokeCap(PROJECT);
@@ -222,21 +239,22 @@ PGraphics drawBox(float w, int tickness, color clr, float opacity) {
   pg.vertex(p2x, p2y);
   
   pg.endShape();
-  
   pg.endDraw();
   return pg;
 }
 
 /// draw image
-PGraphics drawImage(float w, float visibility) {
-  int ww = (int)w;
-  int hh = (int)(w * 1.7);
+PGraphics drawImage(int index, float w, float visibility) {
+  // w = w/2;
+  
+  int ww = int(w);
+  int hh = int(w * 1.7);
   PGraphics pg = createGraphics(ww, hh);
   pg.smooth(60);
   pg.beginDraw();
   
   pg.tint(255, visibility);
-  pg.image(images.get(0), 0, 0, ww, hh);
+  pg.image(images.get(index), 0, 0, ww, hh);
   
   pg.endDraw();
   return pg;
