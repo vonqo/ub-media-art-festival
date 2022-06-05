@@ -8,10 +8,10 @@ final color orange = color(252, 111, 3);
 final color white = color(255, 255, 255);
 final color blue = color(1, 64, 110);
 
-final int totalLayerInFrame = 8;
+final int totalLayerInFrame = 12;
 final float baseWidthOfBorder = 0.9;
-final int boxAnimationIteration = 150;
-final float fftThreshold = 0.2;
+final int boxAnimationIteration = 280;
+final float fftThreshold = 0.1;
 
 final ArrayList<PImage> images = new ArrayList<PImage>();
 final ArrayList<Layer> layers = new ArrayList<Layer>();
@@ -30,16 +30,16 @@ class Layer {
   private int frame = 0;
   private boolean isBox;
   private PGraphics graphics;
+  private float imgVisibility;
   
-  private boolean willVisible;
-  private float imgVisibility = 0;
+  private int leftOffset = 0;
+  private int topOffset = 0;
   
   Layer(int id, boolean isbox, int frameOffset) {
     this.id = id;
     this.isBox = isbox;
     this.frame += frameOffset;
-    int chance = int(random(2));
-    willVisible = chance == 1;
+    imgVisibility = 0;
   }
   
   void reset() {
@@ -47,8 +47,6 @@ class Layer {
     if(isBox) {
       
     } else {
-      int chance = int(random(2));
-      willVisible = chance == 1;
       imgVisibility = 0;
     }
   }
@@ -61,25 +59,31 @@ class Layer {
     
     float iter = ((float)frame / boxAnimationIteration);
     float boxWidth = easeInExpo(iter, 1, width + wOffset, 1);
+    this.topOffset = (int)(zoomPointY - boxWidth * 0.85);
+    this.leftOffset = (int)(zoomPointX - boxWidth * 0.5);
   
     if(isBox) {
       int boxTickness = (int)(boxWidth/17 + baseWidthOfBorder);
-      this.graphics = drawBox(zoomPointX, zoomPointY, boxWidth, boxTickness, white,  512 * iter);
+      this.graphics = drawBox(boxWidth, boxTickness, white,  512 * iter);
     } else {
-      if(willVisible) {
-        float a = boxAnimationIteration * 0.65;
-        float b = 0;
-        if(frame > a) {
-           b = ((boxAnimationIteration - frame) / a) * 512 * imgVisibility;
-        } else {
-           b = (frame / a) * 256 * imgVisibility;
-        }
-        this.graphics = drawImage(zoomPointX, zoomPointY, boxWidth, b);
+      float a = boxAnimationIteration * 0.65;
+      float b = 0;
+      if(frame > a) {
+         b = ((boxAnimationIteration - frame) / a) * 512 * imgVisibility;
       } else {
-        this.graphics = drawImage(zoomPointX, zoomPointY, boxWidth, 0);
+         b = (frame / a) * 256 * imgVisibility;
       }
+      this.graphics = drawImage(boxWidth, b);
     }
     return true;
+  }
+  
+  public int getLeftOffset() {
+    return this.leftOffset;
+  }
+  
+  public int getTopOffset() {
+    return this.topOffset;
   }
   
   public PGraphics getGraphics() {
@@ -99,14 +103,16 @@ class Layer {
 /// ================================================= ///
 void setup() {
   background(0);
-  frameRate(25);
+  frameRate(50);
+  smooth(4);
   
   // prod
   //fullScreen();
-  //size(1080, 1920, P2D);
+  // size(1080, 1920, P2D);
+  size(720, 1280, P2D);
   
   /// dev
-  size(540, 980, P2D); // 1/2 of Full HD vertical
+  // size(540, 980, P2D); // 1/2 of Full HD vertical
   
   /// RUNTINE
   /// ======== audio =======
@@ -146,28 +152,26 @@ void setup() {
 void draw() {
   background(0);
   fft.analyze(fftSpectrum);
-  // println(frameRate);
+  println(frameRate);
   
   float sum = 0;
   for(int i = 0; i < fftBands; i++){
     sum += fftSpectrum[i];
   }
   
-  println(sum);
+  // println(sum);
   
   for(int i = 0; i < layers.size(); i++) {
     Layer layer = layers.get(i);
     if(layer.move()) {
       if(layer.isBox()) {
-        
+        image(layer.getGraphics(), layer.getLeftOffset(), layer.getTopOffset());
       } else {
         if(fftThreshold < sum) {
           layer.setImageVisibility(0.8);
-        } else {
-          layer.setImageVisibility(0.5);
+          image(layer.getGraphics(), layer.getLeftOffset(), layer.getTopOffset());
         }
       }
-      image(layer.getGraphics(), 0, 0);
     } else {
       layer.reset();
       rotateLayers();
@@ -186,30 +190,29 @@ void draw() {
 }
 
 /// Draw 9:16 ratio box
-PGraphics drawBox(int x, int y, float w, int tickness, color clr, float opacity) {
-  PGraphics pg = createGraphics(width, height);
+PGraphics drawBox(float w, int tickness, color clr, float opacity) {
+  int ww = (int)w - tickness;
+  int hh = (int)(w * 1.7) - tickness;
+  PGraphics pg = createGraphics(ww + tickness, hh + tickness);
   pg.smooth(12);
   pg.beginDraw();
   pg.background(0, 0);
   
-  /// h = (w / 9) * 16;
-  double h = w * 1.7;
-  
-  int p1x = (int)(x - w/2);
-  int p1y = (int)(y - h/2);
-  int p2x = (int)(p1x + w);
+  int p1x = tickness/2;
+  int p1y = tickness/2;
+  int p2x = (int)(p1x + ww);
   int p2y = p1y;
   int p3x = p2x;
-  int p3y = (int)(p2y + h);
+  int p3y = (int)(p2y + hh);
   int p4x = p1x;
   int p4y = p3y;
   
-  // pg.stroke(clr, opacity);
-  pg.stroke(clr);
+  pg.stroke(clr, opacity);
+  // pg.stroke(clr);
   pg.strokeWeight(tickness);
   pg.strokeJoin(MITER);
+  pg.strokeCap(PROJECT);
   pg.noFill();
-  
   pg.beginShape();
   pg.vertex(p1x, p1y);
   pg.vertex(p2x, p2y);
@@ -217,6 +220,7 @@ PGraphics drawBox(int x, int y, float w, int tickness, color clr, float opacity)
   pg.vertex(p4x, p4y);
   pg.vertex(p1x, p1y);
   pg.vertex(p2x, p2y);
+  
   pg.endShape();
   
   pg.endDraw();
@@ -224,24 +228,21 @@ PGraphics drawBox(int x, int y, float w, int tickness, color clr, float opacity)
 }
 
 /// draw image
-PGraphics drawImage(int x, int y, float w, float visibility) {
-  PGraphics pg = createGraphics(width, height);
-  pg.smooth(12);
+PGraphics drawImage(float w, float visibility) {
+  int ww = (int)w;
+  int hh = (int)(w * 1.7);
+  PGraphics pg = createGraphics(ww, hh);
+  pg.smooth(60);
   pg.beginDraw();
-  pg.clear();
-  pg.background(0, 0);
-  
-  float widthOffset = w/2;
-  float heightOffset = w * 0.85;
   
   pg.tint(255, visibility);
-  pg.image(images.get(0), zoomPointX - widthOffset, zoomPointY - heightOffset, w, w * 1.7);
+  pg.image(images.get(0), 0, 0, ww, hh);
   
   pg.endDraw();
   return pg;
 }
 
-/// Roate layers;
+/// rotate layers;
 void rotateLayers() {
   Collections.rotate(layers, 1);
 }
