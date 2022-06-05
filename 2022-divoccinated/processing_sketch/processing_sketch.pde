@@ -1,3 +1,8 @@
+// Purrka Dots.
+// @author @vonqo
+// @version 0.2
+// Processing 4.0b8
+
 import processing.sound.*;
 import java.util.Collections;
 
@@ -6,13 +11,15 @@ FFT fft;
 
 final color orange = color(252, 111, 3);
 final color white = color(255, 255, 255);
-final color blue = color(1, 64, 110);
+final color blue = color(66, 135, 245);
+final color tanagerTurquose = color(149, 219, 229);
+final color tealBlue = color(7, 130, 130);
 
 final int totalLayerInFrame = 12;
 final float baseWidthOfBorder = 0.9;
 final int boxAnimationIteration = 150;
 final float fftThreshold = 0.05;
-final float fftThresholdMax = 0.4;
+final float fftThresholdMax = 1.0;
 
 final ArrayList<PImage> images = new ArrayList<PImage>();
 final ArrayList<Layer> layers = new ArrayList<Layer>();
@@ -69,7 +76,7 @@ class Layer {
   
     if(isBox) {
       int boxTickness = int(boxWidth / 12 + baseWidthOfBorder);
-      this.graphics = drawBox(boxWidth, boxTickness, white,  350 * iter);
+      this.graphics = drawBox(boxWidth, boxTickness, tanagerTurquose,  350 * iter);
     } else {
       float a = boxAnimationIteration * 0.65;
       float b = 0;
@@ -127,9 +134,9 @@ void setup() {
   fft.input(in);
   
   /// ======== assets =======
-  images.add(loadImage("choibalsan.jpg"));
-  images.add(loadImage("lp_avatar.png"));
-  images.add(loadImage("pingu.jpg"));
+  //images.add(loadImage("choibalsan.jpg"));
+  //images.add(loadImage("lp_avatar.png"));
+  images.add(loadImage("pingu.png"));
   
   /// ======== positioning =======
   zoomPointX = width/2;
@@ -252,6 +259,7 @@ PGraphics drawImage(int index, float w, float visibility) {
   PGraphics pg = createGraphics(ww, hh);
   pg.smooth(60);
   pg.beginDraw();
+  pg.background(0,0);
   
   pg.tint(255, visibility);
   pg.image(images.get(index), 0, 0, ww, hh);
@@ -289,3 +297,21 @@ float easeInOutSine(float t,float b , float c, float d) {
 float easeInOutLinear (float t,float b , float c, float d) {
   return c*t/d + b;
 }
+
+
+/*
+Copyright (C) 2022 - vonqo
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>
+*/
