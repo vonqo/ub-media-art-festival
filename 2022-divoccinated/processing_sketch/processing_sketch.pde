@@ -12,14 +12,14 @@ FFT fft;
 final color orange = color(252, 111, 3);
 final color white = color(255, 255, 255);
 final color blue = color(66, 135, 245);
-final color tanagerTurquose = color(149, 219, 229);
+final color tanagerTurquose = color(149, 219, 229); // 0782e5
 final color tealBlue = color(7, 130, 130);
 
-final int totalLayerInFrame = 12;
+final int totalLayerInFrame = 16;
 final float baseWidthOfBorder = 0.9;
 final int boxAnimationIteration = 150;
-final float fftThreshold = 0.05;
-final float fftThresholdMax = 1.0;
+final float fftThreshold = 3.0;
+final float fftThresholdMax = 15.0;
 
 final ArrayList<PImage> images = new ArrayList<PImage>();
 final ArrayList<Layer> layers = new ArrayList<Layer>();
@@ -37,6 +37,7 @@ class Layer {
   private int id;
   private int frame = 0;
   private PGraphics graphics;
+  private PImage image;
   private boolean isBox;
   
   private int imgIndex;
@@ -44,13 +45,17 @@ class Layer {
   
   private int leftOffset = 0;
   private int topOffset = 0;
+  private float ww = 0;
   
   Layer(int id, boolean isbox, int frameOffset) {
     this.id = id;
     this.isBox = isbox;
     this.frame += frameOffset;
     imgVisibility = 0;
-    imgIndex = int(random(images.size()));
+    if(!isbox) {
+      this.imgIndex = int(random(images.size()));
+      this.image = images.get(imgIndex);
+    }
   }
   
   void reset() {
@@ -70,24 +75,31 @@ class Layer {
     }
     
     float iter = ((float)frame / boxAnimationIteration);
-    float boxWidth = easeInExpo(iter, 1, width + wOffset, 1);
-    this.topOffset = int(zoomPointY - boxWidth * 0.85);
-    this.leftOffset = int(zoomPointX - boxWidth * 0.5);
+    this.ww = easeInExpo(iter, 1, width + wOffset, 1);
+    this.topOffset = int(zoomPointY - this.ww * 0.85);
+    this.leftOffset = int(zoomPointX - this.ww * 0.5);
   
     if(isBox) {
-      int boxTickness = int(boxWidth / 12 + baseWidthOfBorder);
-      this.graphics = drawBox(boxWidth, boxTickness, tanagerTurquose,  350 * iter);
+      int boxTickness = int(this.ww / 12 + baseWidthOfBorder);
+      this.graphics = drawBox(this.ww, boxTickness, tanagerTurquose,  350 * iter);
     } else {
-      float a = boxAnimationIteration * 0.65;
-      float b = 0;
-      if(frame > a) {
-         b = ((boxAnimationIteration - frame) / a) * 512 * imgVisibility;
-      } else {
-         b = (frame / a) * 256 * imgVisibility;
-      }
-      this.graphics = drawImage(imgIndex, boxWidth, b);
+      //float a = boxAnimationIteration * 0.65;
+      //float b = 0;
+      //if(frame > a) {
+      //   b = ((boxAnimationIteration - frame) / a) * 512 * imgVisibility;
+      //} else {
+      //   b = (frame / a) * 256 * imgVisibility;
+      //}
     }
     return true;
+  }
+  
+  public void showImage(float w) {
+    image(this.image, this.leftOffset, this.topOffset, w, w * 1.7);
+  }
+  
+  public float getWidth() {
+    return this.ww;
   }
   
   public int getLeftOffset() {
@@ -106,8 +118,8 @@ class Layer {
     return this.isBox;
   }
   
-  public void setImageVisibility(float imgVisibility) {
-    this.imgVisibility = imgVisibility;
+  public int getFrame() {
+    return this.frame;
   }
 }
 
@@ -125,6 +137,7 @@ void setup() {
   
   /// dev
   size(540, 980, P2D); // 1/2 of Full HD vertical
+  // size(360, 640, P2D);
   
   /// RUNTINE
   /// ======== audio =======
@@ -136,7 +149,11 @@ void setup() {
   /// ======== assets =======
   //images.add(loadImage("choibalsan.jpg"));
   //images.add(loadImage("lp_avatar.png"));
-  images.add(loadImage("pingu.png"));
+  images.add(loadImage("images/1.png"));
+  images.add(loadImage("images/2.png"));
+  images.add(loadImage("images/3.png"));
+  images.add(loadImage("images/4.png"));
+  images.add(loadImage("images/5.png"));
   
   /// ======== positioning =======
   zoomPointX = width/2;
@@ -169,14 +186,25 @@ void draw() {
   
   for(int i = 0; i < layers.size(); i++) {
     Layer layer = layers.get(i);
+    
     if(layer.move()) {
       if(layer.isBox()) {
         image(layer.getGraphics(), layer.getLeftOffset(), layer.getTopOffset());
       } else {
         float visibility = setVisibleViaNoise();
         if(visibility != 0) {
-          layer.setImageVisibility(visibility);
-          image(layer.getGraphics(), layer.getLeftOffset(), layer.getTopOffset());
+          
+          float a = boxAnimationIteration * 0.65;
+          float b = 0;
+          int imgFrame = layer.getFrame();
+          if(imgFrame > a) {
+             b = ((boxAnimationIteration - imgFrame) / a) * 512 * visibility;
+          } else {
+             b = (imgFrame / a) * 256 * visibility;
+          }
+          
+          tint(255, 255 * visibility);
+          layer.showImage(layer.getWidth());
         }
       }
     } else {
@@ -266,6 +294,10 @@ PGraphics drawImage(int index, float w, float visibility) {
   
   pg.endDraw();
   return pg;
+}
+
+PImage getImage(int index, float w, float visibility) {
+  return images.get(index);
 }
 
 /// rotate layers;
