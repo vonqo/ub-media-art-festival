@@ -1,11 +1,13 @@
-// Purrka Dots.
+// The Loop v1.0
 // @author @vonqo
 // @version 0.2
 // Processing 4.0b8
 
 import processing.sound.*;
+// import processing.video.*;
 import java.util.Collections;
 
+// Capture cam;
 AudioIn in;
 FFT fft;
 
@@ -82,20 +84,20 @@ class Layer {
     if(isBox) {
       int boxTickness = int(this.ww / 12 + baseWidthOfBorder);
       this.graphics = drawBox(this.ww, boxTickness, tanagerTurquose,  350 * iter);
-    } else {
-      //float a = boxAnimationIteration * 0.65;
-      //float b = 0;
-      //if(frame > a) {
-      //   b = ((boxAnimationIteration - frame) / a) * 512 * imgVisibility;
-      //} else {
-      //   b = (frame / a) * 256 * imgVisibility;
-      //}
-    }
+    } 
     return true;
   }
   
   public void showImage(float w) {
+    //if (cam.available()) {
+    //  cam.read();
+    //  // image(cam, this.leftOffset, this.topOffset, w, w * 1.7);
+    //} else {
+    //  // image(this.image, this.leftOffset, this.topOffset, w, w * 1.7);
+    //}
+    
     image(this.image, this.leftOffset, this.topOffset, w, w * 1.7);
+    // image(cam, this.leftOffset, this.topOffset, w, w * 1.7);
   }
   
   public float getWidth() {
@@ -154,6 +156,11 @@ void setup() {
   images.add(loadImage("images/3.png"));
   images.add(loadImage("images/4.png"));
   images.add(loadImage("images/5.png"));
+  
+  /// ======== camera =======
+  //String[] cameras = Capture.list();
+  //cam = new Capture(this, cameras[0]);
+  //cam.start();  
   
   /// ======== positioning =======
   zoomPointX = width/2;
