@@ -4,24 +4,38 @@
 // Processing 4.0b8
 
 import processing.sound.*;
-// import processing.video.*;
+//import processing.video.*;
 import java.util.Collections;
 
-// Capture cam;
+//Capture cam;
 AudioIn in;
 FFT fft;
 
+/// Candiate colors
 final color orange = color(252, 111, 3);
 final color white = color(255, 255, 255);
-final color blue = color(66, 135, 245);
-final color tanagerTurquose = color(149, 219, 229); // 0782e5
+final color blue = color(47, 164, 255);
+final color tanagerTurquose = color(149, 219, 229); // #0782E5
 final color tealBlue = color(7, 130, 130);
+final color navy = color(14, 24, 95);
+final color charcoal = color(16, 24, 32);
+final color yellow = color(254, 231, 21);
+final color midnightBlue = color(30, 31, 38);
+final color periwinkle = color(208, 225, 249);
+final color conquelicot = color(254, 68, 21); // #FE4415
+
+/// Constants
+final color bgColor = midnightBlue;
+final color borderColor = periwinkle;
 
 final int totalLayerInFrame = 16;
 final float baseWidthOfBorder = 0.9;
 final int boxAnimationIteration = 150;
-final float fftThreshold = 3.0;
-final float fftThresholdMax = 15.0;
+//final float fftThreshold = 0.01;
+//final float fftThresholdMax = 1;
+
+final float fftThreshold = 5;
+final float fftThresholdMax = 20;
 
 final ArrayList<PImage> images = new ArrayList<PImage>();
 final ArrayList<Layer> layers = new ArrayList<Layer>();
@@ -83,7 +97,7 @@ class Layer {
   
     if(isBox) {
       int boxTickness = int(this.ww / 12 + baseWidthOfBorder);
-      this.graphics = drawBox(this.ww, boxTickness, tanagerTurquose,  350 * iter);
+      this.graphics = drawBox(this.ww, boxTickness, borderColor,  350 * iter);
     } 
     return true;
   }
@@ -91,12 +105,12 @@ class Layer {
   public void showImage(float w) {
     //if (cam.available()) {
     //  cam.read();
-    //  // image(cam, this.leftOffset, this.topOffset, w, w * 1.7);
+    //  image(cam, this.leftOffset, this.topOffset, w, w * 1.7);
     //} else {
     //  // image(this.image, this.leftOffset, this.topOffset, w, w * 1.7);
     //}
     
-    image(this.image, this.leftOffset, this.topOffset, w, w * 1.7);
+     image(this.image, this.leftOffset, this.topOffset, w, w * 1.7);
     // image(cam, this.leftOffset, this.topOffset, w, w * 1.7);
   }
   
@@ -128,7 +142,7 @@ class Layer {
 /// ================================================= ///
 /// ================================================= ///
 void setup() {
-  background(0);
+  background(bgColor);
   frameRate(26);
   smooth(0);
   
@@ -156,6 +170,12 @@ void setup() {
   images.add(loadImage("images/3.png"));
   images.add(loadImage("images/4.png"));
   images.add(loadImage("images/5.png"));
+  images.add(loadImage("images/6.png"));
+  images.add(loadImage("images/7.png"));
+  images.add(loadImage("images/8.png"));
+  images.add(loadImage("images/9.png"));
+  images.add(loadImage("images/10.png"));
+  images.add(loadImage("images/11.png"));
   
   /// ======== camera =======
   //String[] cameras = Capture.list();
@@ -180,22 +200,22 @@ void setup() {
     }
     layers.add(layer);
   }
-  
 }
 
+// Not to be reproduced
 /// ================================================= ///
 /// ================================================= ///
 void draw() {
-  background(0);
+  background(bgColor);
   fft.analyze(fftSpectrum);
-  println(frameRate);
-  // println(sum);
+  //println(frameRate);
   
   for(int i = 0; i < layers.size(); i++) {
     Layer layer = layers.get(i);
     
     if(layer.move()) {
       if(layer.isBox()) {
+        tint(255,255);
         image(layer.getGraphics(), layer.getLeftOffset(), layer.getTopOffset());
       } else {
         float visibility = setVisibleViaNoise();
@@ -210,7 +230,7 @@ void draw() {
              b = (imgFrame / a) * 256 * visibility;
           }
           
-          tint(255, 255 * visibility);
+          tint(255, 255, 255, 255 * visibility);
           layer.showImage(layer.getWidth());
         }
       }
@@ -236,6 +256,9 @@ float setVisibleViaNoise() {
   for(int i = 0; i < fftBands; i++){
     sum += fftSpectrum[i];
   }
+  
+  println(sum);
+  
   if(fftThreshold < sum) {
     float tmp = sum/fftThresholdMax;
     if(tmp > 1) {
