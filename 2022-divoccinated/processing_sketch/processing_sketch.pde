@@ -21,12 +21,14 @@ final color navy = color(14, 24, 95);
 final color charcoal = color(16, 24, 32);
 final color yellow = color(254, 231, 21);
 final color midnightBlue = color(30, 31, 38);
+final color midnightGrey = color(72, 73, 82);
 final color periwinkle = color(208, 225, 249);
 final color conquelicot = color(254, 68, 21); // #FE4415
 
 /// Constants
 final color bgColor = midnightBlue;
-final color borderColor = periwinkle;
+final color borderColor = midnightGrey;
+final color tintColor = yellow;
 
 final int totalLayerInFrame = 12;
 final float baseWidthOfBorder = 0.9;
@@ -56,6 +58,7 @@ class Layer {
   private PImage image;
   private boolean isBox;
   
+  private color clr;
   private int imgIndex;
   private float imgVisibility;
   
@@ -68,7 +71,9 @@ class Layer {
     this.isBox = isbox;
     this.frame += frameOffset;
     imgVisibility = 0;
-    if(!isbox) {
+    if(isbox) {
+      // this.clr = colorPool[int(random(colorPool.length))];
+    } else {
       this.imgIndex = int(random(images.size()));
       this.image = images.get(this.imgIndex);
     }
@@ -77,13 +82,11 @@ class Layer {
   void reset() {
     frame = 0;
     if(isBox) {
-      
+      // this.clr = colorPool[int(random(colorPool.length))];
     } else {
-      this.imgVisibility = 0;
-      int tmp = int(random(images.size()));
-      while(tmp == imgIndex) {
-        tmp = int(random(images.size()));
-      }
+      this.imgVisibility = 0; 
+      this.imgIndex = int(random(images.size()));
+      this.image = images.get(this.imgIndex);
     }
   }
   
@@ -112,9 +115,9 @@ class Layer {
     //} else {
     //  // image(this.image, this.leftOffset, this.topOffset, w, w * 1.7);
     //}
+    // image(cam, this.leftOffset, this.topOffset, w, w * 1.7);
     
      image(this.image, this.leftOffset, this.topOffset, w, w * 1.7);
-    // image(cam, this.leftOffset, this.topOffset, w, w * 1.7);
   }
   
   public float getWidth() {
@@ -139,6 +142,10 @@ class Layer {
   
   public int getFrame() {
     return this.frame;
+  }
+  
+  public color getColor() {
+    return this.clr;
   }
 }
 
@@ -220,8 +227,7 @@ void draw() {
         tint(255,255);
         image(layer.getGraphics(), layer.getLeftOffset(), layer.getTopOffset());
       } else {
-        // float visibility = setVisibleViaNoise();
-        float visibility = 1;
+        float visibility = setVisibleViaNoise();
         if(visibility != 0) {
           
           float a = boxAnimationIteration * 0.88;
@@ -233,8 +239,8 @@ void draw() {
              b = (imgFrame / a) * 256 * visibility;
           }
           
-          tint(blue, b);
-          // tint(255, 255, 255, b);
+          // tint(layer.getColor(), b);
+          tint(tintColor, b);
           layer.showImage(layer.getWidth());
         }
       }
@@ -256,21 +262,23 @@ void draw() {
 }
 
 float setVisibleViaNoise() {
-  float sum = 0;
-  for(int i = 0; i < fftBands; i++){
-    sum += fftSpectrum[i];
-  }
+  return 1f;
   
-  println(sum);
+  //float sum = 0;
+  //for(int i = 0; i < fftBands; i++){
+  //  sum += fftSpectrum[i];
+  //}
   
-  if(fftThreshold < sum) {
-    float tmp = sum/fftThresholdMax;
-    if(tmp > 1) {
-      return 1;
-    }
-    return tmp;
-  }
-  return 0;
+  //println(sum);
+  
+  //if(fftThreshold < sum) {
+  //  float tmp = sum/fftThresholdMax;
+  //  if(tmp > 1) {
+  //    return 1;
+  //  }
+  //  return tmp;
+  //}
+  //return 0;
 }
 
 /// Draw 9:16 ratio box
