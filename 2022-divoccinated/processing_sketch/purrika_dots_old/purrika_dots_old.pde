@@ -16,7 +16,8 @@
  */
 
 import java.util.Random;
-final String fileName = "IMAGES/Da_Vinci_Vitruve_Luc_Viatour_(cropped).jpg";
+final String fileName = "img/ajliindaraa.png";
+final String outputName = "frame/ajliindaraa.png";
 PGraphics pg;
 
 void setup() {
@@ -36,7 +37,7 @@ void draw() {
   pg.noStroke();
   pg.colorMode(HSB, 360, 100, 100, 100);
   
-  int caseWidth  = 200;
+  int caseWidth  = 150;
   int baseCanvas = width - caseWidth * 2;
 
   // I brought dots pattern parameters in class.
@@ -63,7 +64,7 @@ void draw() {
   
   pg.endDraw();
   
-  pg.save("frames/0001.png");
+  pg.save(outputName);
   // saveFrame("frames/0001.png");
   exit();
 

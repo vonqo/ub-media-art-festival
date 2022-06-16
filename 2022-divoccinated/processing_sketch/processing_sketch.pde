@@ -28,9 +28,9 @@ final color conquelicot = color(254, 68, 21); // #FE4415
 final color bgColor = midnightBlue;
 final color borderColor = periwinkle;
 
-final int totalLayerInFrame = 16;
+final int totalLayerInFrame = 12;
 final float baseWidthOfBorder = 0.9;
-final int boxAnimationIteration = 150;
+final int boxAnimationIteration = 250;
 //final float fftThreshold = 0.01;
 //final float fftThresholdMax = 1;
 
@@ -70,7 +70,7 @@ class Layer {
     imgVisibility = 0;
     if(!isbox) {
       this.imgIndex = int(random(images.size()));
-      this.image = images.get(imgIndex);
+      this.image = images.get(this.imgIndex);
     }
   }
   
@@ -79,8 +79,11 @@ class Layer {
     if(isBox) {
       
     } else {
-      imgVisibility = 0;
-      imgIndex = int(random(images.size()));
+      this.imgVisibility = 0;
+      int tmp = int(random(images.size()));
+      while(tmp == imgIndex) {
+        tmp = int(random(images.size()));
+      }
     }
   }
   
@@ -96,7 +99,7 @@ class Layer {
     this.leftOffset = int(zoomPointX - this.ww * 0.5);
   
     if(isBox) {
-      int boxTickness = int(this.ww / 12 + baseWidthOfBorder);
+      int boxTickness = int(this.ww / 18 + baseWidthOfBorder);
       this.graphics = drawBox(this.ww, boxTickness, borderColor,  350 * iter);
     } 
     return true;
@@ -163,8 +166,6 @@ void setup() {
   fft.input(in);
   
   /// ======== assets =======
-  //images.add(loadImage("choibalsan.jpg"));
-  //images.add(loadImage("lp_avatar.png"));
   images.add(loadImage("images/1.png"));
   images.add(loadImage("images/2.png"));
   images.add(loadImage("images/3.png"));
@@ -176,6 +177,7 @@ void setup() {
   images.add(loadImage("images/9.png"));
   images.add(loadImage("images/10.png"));
   images.add(loadImage("images/11.png"));
+  images.add(loadImage("images/12.png"));
   
   /// ======== camera =======
   //String[] cameras = Capture.list();
@@ -218,19 +220,21 @@ void draw() {
         tint(255,255);
         image(layer.getGraphics(), layer.getLeftOffset(), layer.getTopOffset());
       } else {
-        float visibility = setVisibleViaNoise();
+        // float visibility = setVisibleViaNoise();
+        float visibility = 1;
         if(visibility != 0) {
           
-          float a = boxAnimationIteration * 0.65;
+          float a = boxAnimationIteration * 0.88;
           float b = 0;
           int imgFrame = layer.getFrame();
           if(imgFrame > a) {
-             b = ((boxAnimationIteration - imgFrame) / a) * 512 * visibility;
+             b = ((boxAnimationIteration - imgFrame) / a) * 2024 * visibility;
           } else {
              b = (imgFrame / a) * 256 * visibility;
           }
           
-          tint(255, 255, 255, 255 * visibility);
+          tint(blue, b);
+          // tint(255, 255, 255, b);
           layer.showImage(layer.getWidth());
         }
       }
